@@ -53,20 +53,40 @@ Game.prototype.play = function(player1, player2) {
 Game.prototype.gameOver = function(player1, player2) {
   if (player1.currentIndex > 6 || player2.currentIndex > 6) {
     $(document).off('keyup')
+    var winner
     if (player1.currentIndex > 6) {
       $('h1').text(player1.name + ' wins!!!!')
+      winner = player1
     } else {
       $('h1').text(player2.name + ' wins!!!!')
+      winner = player2
     }
-    $(document).on('keyup', function(event) {
-      var code = event.which
-      if (code === 13) {
-        $(document).off('keyup')
-        this.resetBoard(player1, player2)
-        this.play(player1, player2)
-      }
+    var gameID = location.href.slice(28, location.href.length)
+    var request = $.ajax({
+      method: 'POST',
+      url: '/games/' + gameID,
+      data: {winner: winner.name}
+    })
+    request.done(function(data) {
+      $('p').html("To see your results please visit <a href='localhost:9393/" + data.url + "'>localhost:9393/" + data.url + "</a> To play again press 'enter', to start a new game press 'backspace'")
+      this.next(player1, player2)
     }.bind(this))
   }
+}
+
+Game.prototype.next = function(player1, player2) {
+  $(document).on('keyup', function(event) {
+    var code = event.which
+    console.log(code)
+    if (code === 13) {
+      $(document).off('keyup')
+      this.resetBoard(player1, player2)
+      this.play(player1, player2)
+    } else if (code === 8) {
+      $(document).off('keyup')
+      window.location = '/games/new'
+    }
+  }.bind(this))
 }
 
 $(document).ready(function() {
